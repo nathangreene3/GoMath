@@ -1,14 +1,22 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"math"
+)
 
 func main() {
-	fmt.Println(powFloat64(-2, 1.0/3.0))
+	x := -2.0
+	r := 1.0 / 3.0
+	n := int(1 / r)
+	fmt.Println(powFloat64(x, r))
+	fmt.Println(nthRoot(x, n))
+	fmt.Println(math.Pow(x, r))
 }
 
 // round returns x rounded to the nearest whole number as a float64.
 func round(x float64) float64 {
-	y := float64(int(x)) // Floors x
+	y := float64(int(x)) // Floor of x
 	if 0.5 <= x-y {
 		y++
 	}
@@ -49,7 +57,8 @@ func powFloat64(x, y float64) float64 {
 		if x < 0 && m%2 == 0 {
 			panic("indeterminant form")
 		}
-		v *= newton(func(z float64) float64 { return powInt(z, m) - x }, 1, 0.000001) // Solves v^m - x = 0 for set x and m
+		// v *= newton(func(z float64) float64 { return powInt(z, m) - x }, 1, 0.000001)
+		v *= nthRoot(x, m) // Solves v^m - x = 0 for set x and m
 	}
 	return v
 }
@@ -59,14 +68,31 @@ func sqrt(x float64) float64 {
 	return powFloat64(x, 0.5)
 }
 
-// nthRoot returns x^(1/n).
+// nthRoot returns x^(1/n). This is Newton's method applied to the specific problem of solving v^n-x = 0 for set x and n.
 func nthRoot(x float64, n int) float64 {
-	return powFloat64(x, 1.0/float64(n))
+	chgSign := false
+	if x < 0 {
+		if n%2 == 0 {
+			panic("indeterminant form")
+		}
+		x = -x
+		chgSign = true
+	}
+	tol := 0.000001
+	v0, v1 := 0.0, 1.0
+	for tol < abs(v1-v0) {
+		v0 = v1
+		v1 = v0 * (1 - 1/float64(n)*(1-x/powInt(v0, n)))
+	}
+	if chgSign {
+		v1 = -v1
+	}
+	return v1
 }
 
-// newton finds a local root assuming f is smooth and continuous. Note, this algorithm is known to be unstable.
+// newton finds a local root assuming f is smooth and continuous. Note, Newton's method is known to be unstable.
 func newton(f func(x float64) float64, x0, tol float64) float64 {
-	x1 := 2 * x0
+	x1 := x0 + 2*tol
 	for tol < abs(x1-x0) {
 		x0 = x1
 		x1 = x0 - f(x0)/diff(f, x0, tol)
