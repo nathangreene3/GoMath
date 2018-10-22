@@ -5,13 +5,44 @@ import (
 	"math"
 )
 
+const (
+	// E is Euler's number
+	E float64 = 2.718281
+	// Pi is the ratio of a circle's circumfrence to its diameter
+	Pi float64 = 3.141592
+)
+
 func main() {
-	x := -2.0
-	r := 1.0 / 3.0
-	n := int(1 / r)
-	fmt.Println(powFloat64(x, r))
-	fmt.Println(nthRoot(x, n))
-	fmt.Println(math.Pow(x, r))
+	// x := -2.0
+	// r := 1.0 / 3.0
+	// n := int(1 / r)
+	// fmt.Println(powFloat64(x, r))
+	// fmt.Println(nthRoot(x, n))
+	// fmt.Println(math.Pow(x, r))
+	var (
+		bestPi float64
+		pi     float64
+		err    float64
+		k      int
+	)
+	for i := 0; i < 20; i++ {
+		pi = archimedes(i)
+		fmt.Println(pi)
+		if abs(math.Pi-pi) < abs(math.Pi-bestPi) {
+			k = i
+			bestPi = pi
+		}
+	}
+	fmt.Println(k, bestPi, math.Pi, err)
+}
+
+// archimedes approximates pi. k = 10 is optimal, but still terrible. Math pkg gives k = 13 as optimal.
+func archimedes(k int) float64 {
+	b := sqrt(3.0) / 2.0
+	for i := 0; i < k; i++ {
+		b = sqrt((1.0 - sqrt(1.0-powFloat64(b, 2.0))) / 2.0)
+	}
+	return 3.0 * powInt(2.0, k) * b
 }
 
 // round returns x rounded to the nearest whole number as a float64.
@@ -21,6 +52,24 @@ func round(x float64) float64 {
 		y++
 	}
 	return y
+}
+
+func exp(x float64) float64 {
+	return powFloat64(E, x)
+}
+
+// ln returns the natural logarithm of a number
+func ln(x float64) float64 {
+	if x <= 0 {
+		panic("x must be positive")
+	}
+	v0 := float64(0)
+	v1 := float64(1)
+	for 0.000001 < abs(v1-v0) {
+		v0 = v1
+		v1 = v0 + x*powFloat64(x, -v0) - 1
+	}
+	return v1
 }
 
 // powInt returns x^n for any real x and any integer n.
@@ -65,7 +114,7 @@ func powFloat64(x, y float64) float64 {
 
 // sqrt returns x^0.5.
 func sqrt(x float64) float64 {
-	return powFloat64(x, 0.5)
+	return nthRoot(x, 2)
 }
 
 // nthRoot returns x^(1/n). This is Newton's method applied to the specific problem of solving v^n-x = 0 for set x and n.
