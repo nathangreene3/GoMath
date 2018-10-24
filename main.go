@@ -4,14 +4,19 @@ func main() {
 
 }
 
+// isPrime factors a positive integer and determines if it
+// is prime or not.
 func isPrime(n int) bool {
-	if len(factor(n)) == 2 {
+	if len(*factor(n)) == 2 {
 		return true
 	}
 	return false
 }
 
-func factor(n int) map[int]int {
+// factor returns a collection of each divisor of a positive
+// integer mapped to the number of times each divisor
+// divides said integer. See GeeksForGeeks.
+func factor(n int) *map[int]int {
 	if n == 0 {
 		panic("cannot factor zero")
 	}
@@ -31,7 +36,7 @@ func factor(n int) map[int]int {
 		factors[n]++
 	}
 	factors[m] = 1
-	return factors
+	return &factors
 }
 
 // round returns x rounded to the nearest whole number as a float64.
@@ -58,19 +63,6 @@ func roundTo(x float64, n int) float64 {
 	return x
 }
 
-func powYacas(x float64, n int) float64 {
-	r := float64(1)
-	p := x
-	for 0 < n {
-		if n%2 != 0 {
-			r *= p
-		}
-		p *= p
-		n = n >> 1
-	}
-	return r
-}
-
 // powInt returns x^n for any real x and any integer n.
 func powInt(x float64, n int) float64 {
 	var y float64
@@ -84,7 +76,7 @@ func powInt(x float64, n int) float64 {
 					y *= x
 				}
 				x *= x
-				n = n >> 1
+				n = n >> 1 // Divide by 2
 			}
 		case n < 0:
 			y = 1 / powInt(x, -n)
@@ -117,7 +109,7 @@ func powFloat64(x, y float64) float64 {
 
 // sqrt returns x^0.5.
 func sqrt(x float64) float64 {
-	return powFloat64(x, 0.5)
+	return nthRoot(x, 2)
 }
 
 // nthRoot returns x^(1/n). This is Newton's method applied to the specific problem of solving v^n-x = 0 for set x and n.
@@ -132,9 +124,10 @@ func nthRoot(x float64, n int) float64 {
 	}
 	tol := 0.000001
 	v0, v1 := 0.0, 1.0
+	p := float64(n)
 	for tol < abs(v1-v0) {
 		v0 = v1
-		v1 = v0 * (1 - 1/float64(n)*(1-x/powInt(v0, n)))
+		v1 = ((p-1)*v0 + x) / p * powInt(v0, 1-n) // v0 * (1 - 1/float64(n)*(1-x/powInt(v0, n)))
 	}
 	if chgSign {
 		v1 = -v1
@@ -152,6 +145,7 @@ func newton(f func(x float64) float64, x0, tol float64) float64 {
 	return x1
 }
 
+// bisection: TODO
 func bisection(f func(x float64) float64, x0, x1, tol float64) float64 {
 	x := (x0 + x1) / 2.0
 	y, y0, y1 := f(x), f(x0), f(x1)
