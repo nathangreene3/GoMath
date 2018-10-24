@@ -1,75 +1,74 @@
 package main
 
-import (
-	"fmt"
-	"math"
-)
-
-const (
-	// E is Euler's number
-	E float64 = 2.718281
-	// Pi is the ratio of a circle's circumfrence to its diameter
-	Pi float64 = 3.141592
-)
-
 func main() {
-	// x := -2.0
-	// r := 1.0 / 3.0
-	// n := int(1 / r)
-	// fmt.Println(powFloat64(x, r))
-	// fmt.Println(nthRoot(x, n))
-	// fmt.Println(math.Pow(x, r))
-	var (
-		bestPi float64
-		pi     float64
-		err    float64
-		k      int
-	)
-	for i := 0; i < 20; i++ {
-		pi = archimedes(i)
-		fmt.Println(pi)
-		if abs(math.Pi-pi) < abs(math.Pi-bestPi) {
-			k = i
-			bestPi = pi
-		}
-	}
-	fmt.Println(k, bestPi, math.Pi, err)
+
 }
 
-// archimedes approximates pi. k = 10 is optimal, but still terrible. Math pkg gives k = 13 as optimal.
-func archimedes(k int) float64 {
-	b := sqrt(3.0) / 2.0
-	for i := 0; i < k; i++ {
-		b = sqrt((1.0 - sqrt(1.0-powFloat64(b, 2.0))) / 2.0)
+func isPrime(n int) bool {
+	if len(factor(n)) == 2 {
+		return true
 	}
-	return 3.0 * powInt(2.0, k) * b
+	return false
+}
+
+func factor(n int) map[int]int {
+	if n == 0 {
+		panic("cannot factor zero")
+	}
+	factors := map[int]int{1: 1}
+	m := n
+	for n%2 == 0 {
+		factors[2]++
+		n /= 2
+	}
+	for i := 3; i < int(round(sqrt(float64(n)))); i += 2 {
+		for n%i == 0 {
+			factors[i]++
+			n /= i
+		}
+	}
+	if 2 < n {
+		factors[n]++
+	}
+	factors[m] = 1
+	return factors
 }
 
 // round returns x rounded to the nearest whole number as a float64.
 func round(x float64) float64 {
+	changedSign := false
+	if x < 0 {
+		x = -x
+		changedSign = true
+	}
 	y := float64(int(x)) // Floor of x
 	if 0.5 <= x-y {
 		y++
 	}
+	if changedSign {
+		return -y
+	}
 	return y
 }
 
-func exp(x float64) float64 {
-	return powFloat64(E, x)
+// roundTo rounds a number to the nth decimal place.
+// For example, x = 0.123 becomes x.1 when n = 1.
+func roundTo(x float64, n int) float64 {
+	// TODO
+	return x
 }
 
-// ln returns the natural logarithm of a number
-func ln(x float64) float64 {
-	if x <= 0 {
-		panic("x must be positive")
+func powYacas(x float64, n int) float64 {
+	r := float64(1)
+	p := x
+	for 0 < n {
+		if n%2 != 0 {
+			r *= p
+		}
+		p *= p
+		n = n >> 1
 	}
-	v0 := float64(0)
-	v1 := float64(1)
-	for 0.000001 < abs(v1-v0) {
-		v0 = v1
-		v1 = v0 + x*powFloat64(x, -v0) - 1
-	}
-	return v1
+	return r
 }
 
 // powInt returns x^n for any real x and any integer n.
@@ -78,10 +77,14 @@ func powInt(x float64, n int) float64 {
 	if x != 0 {
 		switch {
 		case 0 < n:
-			y = powInt(x, n/2)
-			y *= y
-			if n%2 != 0 {
-				y *= x
+			// Yacas' method
+			y = 1
+			for 0 < n {
+				if n%2 != 0 {
+					y *= x
+				}
+				x *= x
+				n = n >> 1
 			}
 		case n < 0:
 			y = 1 / powInt(x, -n)
@@ -114,7 +117,7 @@ func powFloat64(x, y float64) float64 {
 
 // sqrt returns x^0.5.
 func sqrt(x float64) float64 {
-	return nthRoot(x, 2)
+	return powFloat64(x, 0.5)
 }
 
 // nthRoot returns x^(1/n). This is Newton's method applied to the specific problem of solving v^n-x = 0 for set x and n.
@@ -149,6 +152,24 @@ func newton(f func(x float64) float64, x0, tol float64) float64 {
 	return x1
 }
 
+func bisection(f func(x float64) float64, x0, x1, tol float64) float64 {
+	x := (x0 + x1) / 2.0
+	y, y0, y1 := f(x), f(x0), f(x1)
+
+	switch {
+	case y == 0:
+		return x
+	case y0*y < 0:
+		x = bisection(f, x0, x, tol)
+	case y*y1 < 0:
+		x = bisection(f, x, x1, tol)
+	default:
+		panic("no root on boundary")
+	}
+
+	return x
+}
+
 // diff returns the approximate value of df/dx at x0.
 func diff(f func(x float64) float64, x0, tol float64) float64 {
 	return (f(x0+tol) - f(x0-tol)) / (2 * tol)
@@ -156,6 +177,7 @@ func diff(f func(x float64) float64, x0, tol float64) float64 {
 
 // abs returns |x|.
 func abs(x float64) float64 {
+	// x = math.Abs(x) // Check out what the math package does: return Float64frombits(Float64bits(x) &^ (1 << 63))
 	if x < 0 {
 		x *= -1
 	}
