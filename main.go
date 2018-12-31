@@ -17,13 +17,44 @@ func main() {
 	fmt.Println("correct: ", math.Pow(0.587298215905968, 0.537282093653805))
 }
 
-// isPrime factors a positive integer and determines if it is prime or
-// not.
+// numDenomPair returns two integers m and n (returned as floating points) such that r = m/n and m and n are relatively prime (gcd(m,n) = 1). This is very costly.
+func numDenomPair(r float64) (float64, float64) {
+	// Assume r = m/n, or nr = m where gcd(m,n) = 1
+	var signChanged bool
+	if r < 0 {
+		r = -r
+		signChanged = true
+	}
+	var m, n float64
+	for n = 1; ; n++ {
+		m = n * r
+		if m == float64(int(m)) {
+			break
+		}
+	}
+	if signChanged {
+		return -m, n
+	}
+	return m, n
+}
+
+// isPrime reports whether a number is prime or not. Panics if n is less than two.
 func isPrime(n int) bool {
-	if len(factor(n)) == 2 {
+	if n < 2 {
+		panic("integer n must be greater than one")
+	}
+	if n == 2 || n == 3 {
 		return true
 	}
-	return false
+	if n%2 == 0 {
+		return false
+	}
+	for i := 5; i <= int(sqrt(float64(n))); i += 2 {
+		if n%i == 0 {
+			return false
+		}
+	}
+	return true
 }
 
 // factor returns a collection of each divisor of a positive integer
@@ -125,14 +156,29 @@ func powInt(x float64, n int) float64 {
 // will cause a panic because 1 / (1.1 - 1.0) = 10 is even.
 func powFloat64(x, y float64) float64 {
 	n := int(y)
-	r := y - float64(n)
-	v := powInt(x, n) // v = 1 when 0 <= y < 1
+	r := y - float64(n) // 0 <= r < 1
+	v := powInt(x, n)   // v = 1 when 0 <= y < 1
 	if r != 0 {
-		m := int(round(1 / r))
-		if x < 0 && m%2 == 0 {
-			panic("imaginary form")
+		// m := int(round(1 / r)) // This is wrong. r = a/b for gcd(a,b)=1, not r = 1/b.
+		// if x < 0 && m%2 == 0 {
+		// 	panic("imaginary form")
+		// }
+		// v *= nthRoot(x, m) // Solves y^m - x = 0 for variable y given x and m
+		// v *= newton(func(v0 float64) float64 { return powFloat64(v0, 1.0/r) - x }, 1, 0.001)
+		tol := 0.001
+		v0 := 1.0
+		v1 := v0 + 2*tol
+		c := 10
+		for tol < abs(v1-v0) {
+			v0 = v1
+			v1 = v0 * (1 + r*(x*powFloat64(x, -1/r)-1))
+			c--
+			fmt.Println(v1)
+			if c == 0 {
+				break
+			}
 		}
-		v *= nthRoot(x, m) // Solves y^m - x = 0 for variable y given x and m
+		v *= v1
 	}
 	return v
 }
@@ -242,4 +288,16 @@ func gcd(a, b int) int {
 		a, b = b, a%b
 	}
 	return a
+}
+
+// factorial returns n! Panics if n < 0.
+func factorial(n int) int {
+	if n < 0 {
+		panic("integer n must be non-negative")
+	}
+	f := 1
+	for ; 1 < n; n-- {
+		f *= n
+	}
+	return f
 }
