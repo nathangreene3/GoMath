@@ -6,6 +6,26 @@ import (
 	"testing"
 )
 
+func TestFactorial(t *testing.T) {
+	data := []struct {
+		input int
+		ans   int
+	}{
+		{0, 1},
+		{1, 1},
+		{2, 2},
+		{3, 6},
+		{4, 24},
+		{5, 120},
+	}
+	var result int
+	for i := range data {
+		result = factorial(data[i].input)
+		if result != data[i].ans {
+			t.Fatalf("expected %d, received %d\n", data[i].ans, result)
+		}
+	}
+}
 func TestLn(t *testing.T) {
 
 }

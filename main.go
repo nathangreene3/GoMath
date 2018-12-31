@@ -10,11 +10,231 @@ const (
 	Pi = float64(3.141592653589793)
 	// E is Euler's number, the natural rate of growth of the exponential function.
 	E = float64(2.718281828459045)
+	// LN2 is the natural logarithm of two (ln(2))
+	LN2 = 0.693147180559945
 )
 
 func main() {
-	fmt.Println("returned:", powFloat64(0.587298215905968, 0.537282093653805))
-	fmt.Println("correct: ", math.Pow(0.587298215905968, 0.537282093653805))
+	x := []float64{-3, -2, -1, 0, 1, 2, 3}
+	for i := range x {
+		// fmt.Printf("exp(%0.0f) = %0.2f\n", x[i], exp(x[i]))
+		fmt.Printf("err: %v\n", abs(math.Exp(x[i])-exp(x[i])))
+	}
+	// x, y := 0.587298215905968, 0.537282093653805
+	// result, correctAnswer := powFloat64(x, y), math.Pow(x, y)
+	// err := abs(correctAnswer - result)
+	// fmt.Printf("powFloat64(%0.15f, %0.15f) = %0.15f\n", x, y, result)
+	// fmt.Printf("  math.Pow(%0.15f, %0.15f) = %0.15f\n", x, y, correctAnswer)
+	// fmt.Printf("err = %0.15f\n", err)
+}
+
+// powInt returns x^n for any real x and any integer n.
+func powInt(x float64, n int) float64 {
+	var y float64
+	if x != 0 {
+		switch {
+		case 0 < n:
+			// Yacas' method
+			y = 1
+			for 0 < n {
+				if n%2 != 0 {
+					y *= x
+				}
+				x *= x
+				n /= 2
+			}
+		case n < 0:
+			y = 1 / powInt(x, -n)
+		case n == 0:
+			y = 1
+		}
+	} else {
+		if n == 0 {
+			panic("indeterminant form")
+		}
+	}
+	return y
+}
+
+// powFloat64 returns x^y for real x and y. Panics if x < 0 and y is
+// poorly chosen. If y is an integer (possibly negative), panic will not
+// occur. If it is a fraction, and the reciprical of the difference in y
+// and its integer part is even, panic will occur. For example, y = 1.1
+// will cause a panic because 1 / (1.1 - 1.0) = 10 is even.
+func powFloat64(x, y float64) float64 {
+	tol := 0.000000000000001
+	n := int(y)
+	r := y - float64(n) // 0 <= r < 1; can't use nthRoot as r is not 1/a always
+	v := powInt(x, n)   // v = 1 when 0 <= y < 1
+	if tol < r {
+		return v * exp(r*ln(x))
+	}
+	return v
+}
+
+// exp returns e^x.if z/d < 0 {
+// 	fmt.Printf("%0.15f\n", z/d)
+// } else {
+// 	fmt.Printf(" %0.15f\n", z/d)
+// }
+func exp(x float64) float64 {
+	// math.Exp does this: e^r = 2^k * e^r for x = k ln 2 for some maximal integer k and r on [0, ln 2]
+	// https://math.stackexchange.com/questions/18445/fastest-way-to-calculate-ex-up-to-arbitrary-number-of-decimals
+
+	tol := 0.000000000000001
+	v := 1.0
+	k := x/LN2 - 1
+	r := x - k
+	if r == 0 {
+		return v
+	}
+	v0 := 2 * tol
+	v1 := 0.0
+	z := 1.0
+	d := 1.0
+	n := 1.0
+	for tol < abs(v1-v0) {
+		v0 = v1
+		v1 += z / d
+		z *= r
+		d *= n
+		n++
+	}
+	return v * v1
+}
+
+// sqrt returns +x^0.5.
+func sqrt(x float64) float64 {
+	return nthRoot(x, 2)
+}
+
+// nthRoot returns x^(1/n). This is Newton's method applied to the
+// specific problem of solving v^n-x = 0 for set x and n.
+func nthRoot(x float64, n int) float64 {
+	chgSign := false
+	if x < 0 {
+		if n%2 == 0 {
+			panic("indeterminant form")
+		}
+		x = -x
+		chgSign = true
+	}
+	tol := 0.000000000000001
+	v0 := 1.0
+	v1 := v0 + 2*tol
+	p := float64(n)
+	for tol < abs(v1-v0) {
+		v0 = v1
+		v1 = v0 / p * (p - 1.0 + x*powInt(v0, -n))
+		fmt.Println(v1)
+	}
+	if chgSign {
+		v1 = -v1
+	}
+	return v1
+}
+
+// ln returns the natural logarithm of base e. TODO: CURRENTLY DOESN'T CONVERGE.
+func ln(x float64) float64 {
+	// Solves e^y-x = 0 for variable y given x
+	tol := 0.01 //0.000000000000001
+	y0 := 1.0
+	y1 := y0 + 2*tol
+	for tol < abs(y1-y0) {
+		y0 = y1
+		y1 = y0 + x*exp(-y0) - 1
+	}
+	return y1
+}
+
+// logb returns the base b-logarithm of x.
+func logb(x, b float64) float64 {
+	return ln(x) / ln(b)
+}
+
+func log10(x float64) float64 {
+	return ln(x) / ln(10)
+}
+
+func log2(x float64) float64 {
+	return ln(x) / ln(2)
+}
+
+// newton (also newton-raphson) finds a local root assuming f is smooth and continuous. Note,
+// Newton's method is known to be unstable.
+func newton(f func(x float64) float64, x0 float64) float64 {
+	tol := 0.000000000000001
+	x1 := x0 + 2*tol
+	for tol < abs(x1-x0) {
+		x0 = x1
+		x1 = x0 - f(x0)/diff(f, x0, tol)
+		if x0 == x1 {
+			panic("x0 is a fixed point") // Fixed points map to themselves: f(x) = x
+		}
+	}
+	return x1
+}
+
+// bisection: TODO
+func bisection(f func(x float64) float64, x0, x1 float64) float64 {
+	x := (x0 + x1) / 2.0
+	y, y0, y1 := f(x), f(x0), f(x1)
+
+	switch {
+	case y == 0:
+		return x
+	case y0*y < 0:
+		return bisection(f, x0, x)
+	case y*y1 < 0:
+		return bisection(f, x, x1)
+	default:
+		panic("no root on boundary")
+	}
+}
+
+// diff returns the approximate value of df/dx at x0.
+func diff(f func(x float64) float64, x0, tol float64) float64 {
+	return (f(x0+tol) - f(x0-tol)) / (2 * tol)
+}
+
+// differential TODO
+func differential(f func(x float64) float64, x0, tol float64) {
+	// TODO: return the differential function of f
+}
+
+// abs returns |x|.
+func abs(x float64) float64 {
+	// math.Abs(x) does this: return Float64frombits(Float64bits(x) &^ (1 << 63))
+	if x < 0 {
+		return -x
+	}
+	return x
+}
+
+// gcd returns the greatest common divisor of two non-negative integers.
+// TODO: Optimize using least squares or something...
+func gcd(a, b int) int {
+	for b != 0 {
+		a, b = b, a%b
+	}
+	return a
+}
+
+// lcm returns the least common multiple of two integers.
+func lcm(a, b int) int {
+	return a * b / gcd(a, b)
+}
+
+// factorial returns n! Panics if n < 0.
+func factorial(n int) int {
+	if n < 0 {
+		panic("integer n must be non-negative")
+	}
+	f := 1
+	for ; 1 < n; n-- {
+		f *= n
+	}
+	return f
 }
 
 // numDenomPair returns two integers m and n (returned as floating points) such that r = m/n and m and n are relatively prime (gcd(m,n) = 1). This is very costly.
@@ -119,185 +339,4 @@ func roundUpToBase(n, b int) int {
 		panic("base b must be positive")
 	}
 	return n + b - (n % b)
-}
-
-// powInt returns x^n for any real x and any integer n.
-func powInt(x float64, n int) float64 {
-	var y float64
-	if x != 0 {
-		switch {
-		case 0 < n:
-			// Yacas' method
-			y = 1
-			for 0 < n {
-				if n%2 != 0 {
-					y *= x
-				}
-				x *= x
-				n /= 2
-			}
-		case n < 0:
-			y = 1 / powInt(x, -n)
-		case n == 0:
-			y = 1
-		}
-	} else {
-		if n == 0 {
-			panic("indeterminant form")
-		}
-	}
-	return y
-}
-
-// powFloat64 returns x^y for real x and y. Panics if x < 0 and y is
-// poorly chosen. If y is an integer (possibly negative), panic will not
-// occur. If it is a fraction, and the reciprical of the difference in y
-// and its integer part is even, panic will occur. For example, y = 1.1
-// will cause a panic because 1 / (1.1 - 1.0) = 10 is even.
-func powFloat64(x, y float64) float64 {
-	n := int(y)
-	r := y - float64(n) // 0 <= r < 1
-	v := powInt(x, n)   // v = 1 when 0 <= y < 1
-	if r != 0 {
-		// m := int(round(1 / r)) // This is wrong. r = a/b for gcd(a,b)=1, not r = 1/b.
-		// if x < 0 && m%2 == 0 {
-		// 	panic("imaginary form")
-		// }
-		// v *= nthRoot(x, m) // Solves y^m - x = 0 for variable y given x and m
-		// v *= newton(func(v0 float64) float64 { return powFloat64(v0, 1.0/r) - x }, 1, 0.001)
-		tol := 0.001
-		v0 := 1.0
-		v1 := v0 + 2*tol
-		c := 10
-		for tol < abs(v1-v0) {
-			v0 = v1
-			v1 = v0 * (1 + r*(x*powFloat64(x, -1/r)-1))
-			c--
-			fmt.Println(v1)
-			if c == 0 {
-				break
-			}
-		}
-		v *= v1
-	}
-	return v
-}
-
-func exp(x float64) float64 {
-	return powFloat64(E, x)
-}
-
-// sqrt returns x^0.5.
-func sqrt(x float64) float64 {
-	return nthRoot(x, 2)
-}
-
-// nthRoot returns x^(1/n). This is Newton's method applied to the
-// specific problem of solving v^n-x = 0 for set x and n.
-func nthRoot(x float64, n int) float64 {
-	chgSign := false
-	if x < 0 {
-		if n%2 == 0 {
-			panic("indeterminant form")
-		}
-		x = -x
-		chgSign = true
-	}
-	tol := 0.000000000000001
-	v0 := 1.0
-	v1 := v0 + 2*tol
-	p := float64(n)
-	for tol < abs(v1-v0) {
-		v0 = v1
-		v1 = v0 / p * (p - 1.0 + x*powInt(v0, -n))
-		fmt.Println(v1)
-	}
-	if chgSign {
-		v1 = -v1
-	}
-	return v1
-}
-
-// ln returns the natural logarithm of base e. TODO: CURRENTLY DOESN'T CONVERGE. PROBLEM IN nthRoot.
-func ln(x float64) float64 {
-	// Solves e^y-x = 0 for variable y given x
-	tol := 0.000000000000001
-	y0 := 1.0
-	y1 := y0 + 2*tol
-	c := 10
-	for tol < abs(y1-y0) {
-		y0 = y1
-		y1 = y0 - 1.0 + x*exp(-y0)
-		fmt.Printf("%0.6f %0.6f %0.6f\n", y0, exp(-y0), math.Exp(-y0))
-		c--
-		if c == 0 {
-			break
-		}
-	}
-	return y1
-}
-
-// newton (also newton-raphson) finds a local root assuming f is smooth and continuous. Note,
-// Newton's method is known to be unstable.
-func newton(f func(x float64) float64, x0, tol float64) float64 {
-	x1 := x0 + 2*tol
-	for tol < abs(x1-x0) {
-		x0 = x1
-		x1 = x0 - f(x0)/diff(f, x0, tol)
-	}
-	return x1
-}
-
-// bisection: TODO
-func bisection(f func(x float64) float64, x0, x1, tol float64) float64 {
-	x := (x0 + x1) / 2.0
-	y, y0, y1 := f(x), f(x0), f(x1)
-
-	switch {
-	case y == 0:
-		return x
-	case y0*y < 0:
-		x = bisection(f, x0, x, tol)
-	case y*y1 < 0:
-		x = bisection(f, x, x1, tol)
-	default:
-		panic("no root on boundary")
-	}
-
-	return x
-}
-
-// diff returns the approximate value of df/dx at x0.
-func diff(f func(x float64) float64, x0, tol float64) float64 {
-	return (f(x0+tol) - f(x0-tol)) / (2 * tol)
-}
-
-// abs returns |x|.
-func abs(x float64) float64 {
-	// x = math.Abs(x) // math package does this: return Float64frombits(Float64bits(x) &^ (1 << 63))
-	if x < 0 {
-		return -x
-	}
-	return x
-}
-
-// gcd returns the greatest common divisor of two non-negative integers.
-// TODO: Optimize using least squares or something...
-func gcd(a, b int) int {
-	for b != 0 {
-		a, b = b, a%b
-	}
-	return a
-}
-
-// factorial returns n! Panics if n < 0.
-func factorial(n int) int {
-	if n < 0 {
-		panic("integer n must be non-negative")
-	}
-	f := 1
-	for ; 1 < n; n-- {
-		f *= n
-	}
-	return f
 }
