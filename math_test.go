@@ -26,86 +26,23 @@ func TestFactorial(t *testing.T) {
 		}
 	}
 }
-func TestLn(t *testing.T) {
-
-}
-
-func BenchmarkDivBy2v1(b *testing.B) {
-	var n int
-	for i := 0; i < b.N; i++ {
-		n = math.MaxInt64
-		n /= 2
-	}
-}
-
-func BenchmarkDivBy2v2(b *testing.B) {
-	var n int
-	for i := 0; i < b.N; i++ {
-		n = math.MaxInt64
-		n = n / 2
-	}
-}
-
-func BenchmarkBitShiftBy1(b *testing.B) {
-	var n int
-	for i := 0; i < b.N; i++ {
-		n = math.MaxInt64
-		n = n >> 1
-	}
-}
 
 func TestPowInt(t *testing.T) {
+	var x float64
+	var n int
 	var result float64
 	var expected float64
 
-	tolerance := 0.000000001
-
-	result = powInt(2, 3)
-	expected = 8
-	if tolerance < abs(expected-result) {
-		t.Fatalf("expected %v, received %v\n", expected, result)
-		t.FailNow()
-	}
-
-	result = powInt(-2, 3)
-	expected = -8
-	if tolerance < abs(expected-result) {
-		t.Fatalf("expected %v, received %v\n", expected, result)
-		t.FailNow()
-	}
-
-	result = powInt(2, -3)
-	expected = 1.0 / 8.0
-	if tolerance < abs(expected-result) {
-		t.Fatalf("expected %v, received %v\n", expected, result)
-		t.FailNow()
-	}
-
-	result = powInt(-2, -3)
-	expected = -1.0 / 8.0
-	if tolerance < abs(expected-result) {
-		t.Fatalf("expected %v, received %v\n", expected, result)
-		t.FailNow()
-	}
-
-	result = powInt(0, 3)
-	expected = 0
-	if tolerance < abs(expected-result) {
-		t.Fatalf("expected %v, received %v\n", expected, result)
-		t.FailNow()
-	}
-
-	result = powInt(2, 0)
-	expected = 1
-	if tolerance < abs(expected-result) {
-		t.Fatalf("expected %v, received %v\n", expected, result)
-		t.FailNow()
-	}
-
-	result = powInt(2.1, 3)
-	expected = 2.1 * 2.1 * 2.1
-	if tolerance < abs(expected-result) {
-		t.Fatalf("expected %v, received %v\n", expected, result)
+	for i := 0; i < 1000; i++ {
+		x, n = rand.ExpFloat64(), rand.Int() // Cant test negative x using math.Pow
+		result = powInt(x, n)
+		expected = math.Pow(x, float64(n))
+		if tol <= abs(expected-result) {
+			if expected < 0 || result < 0 {
+				t.Fatalf("powInt(%v)\nexpected %0.15f\nreturned %0.15f\n   error  %0.15f\n", x, expected, result, abs(result-expected))
+			}
+			t.Fatalf("powInt(%v)\nexpected %0.15f\nreturned %0.15f\n   error %0.15f\n", x, expected, result, abs(result-expected))
+		}
 	}
 }
 
@@ -114,13 +51,15 @@ func TestPow(t *testing.T) {
 	var result float64
 	var expected float64
 
-	tolerance := 0.000000001
 	for i := 0; i < 1000; i++ {
 		x, y = rand.ExpFloat64(), rand.ExpFloat64()
 		result = pow(x, y)
 		expected = math.Pow(x, y)
-		if tolerance < abs(expected-result) {
-			t.Fatalf("i = %d input x = %v, y = %v, expected %v, received %v\n", i, x, y, expected, result)
+		if tol <= abs(expected-result) {
+			if expected < 0 || result < 0 {
+				t.Fatalf("pow(%v)\nexpected %0.15f\nreturned %0.15f\n   error  %0.15f\n", x, expected, result, abs(result-expected))
+			}
+			t.Fatalf("pow(%v)\nexpected %0.15f\nreturned %0.15f\n   error %0.15f\n", x, expected, result, abs(result-expected))
 		}
 	}
 }
@@ -130,13 +69,29 @@ func TestExp(t *testing.T) {
 	var result float64
 	var expected float64
 
-	tolerance := 0.000000001
 	for i := 0; i < 1000; i++ {
 		x = math.Pow(-1, float64(rand.Intn(2)+1)) * rand.ExpFloat64()
 		result = exp(x)
 		expected = math.Exp(x)
-		if tolerance < abs(expected-result) {
-			t.Fatalf("i = %d input x = %v, expected %v, received %v\n", i, x, expected, result)
+		if tol < abs(expected-result) {
+			t.Fatalf("exp(%0.15f) expected %0.15f, returned %0.15f\n", x, expected, result)
+		}
+	}
+}
+func TestLn(t *testing.T) {
+	var x float64
+	var result float64
+	var expected float64
+
+	for i := 0; i < 1000; i++ {
+		x = rand.ExpFloat64()
+		result = ln(x)
+		expected = math.Log(x)
+		if tol <= abs(expected-result) {
+			if expected < 0 || result < 0 {
+				t.Fatalf("ln(%v)\nexpected %0.15f\nreturned %0.15f\n   error  %0.15f\n", x, expected, result, abs(result-expected))
+			}
+			t.Fatalf("ln(%v)\nexpected %0.15f\nreturned %0.15f\n   error %0.15f\n", x, expected, result, abs(result-expected))
 		}
 	}
 }

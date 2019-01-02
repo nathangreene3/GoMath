@@ -12,27 +12,16 @@ const (
 	E = float64(2.718281828459045)
 	// LN2 is the natural logarithm of two (ln(2))
 	LN2 = 0.693147180559945
-	// tol is the tolerance required by all numerical functions
-	tol = 0.000000000000001
+	// tol (5e-15) is the tolerance required by all numerical functions
+	tol = 0.000000000000005
 )
 
 func main() {
-	// x, r := 0.587298215905968, 0.537282093653805
-	// x := 0.587298215905968
-	x := 0.5872982159059681
-	r := 0.5372820936538049
-	fmt.Println(pow(x, r))
-	fmt.Println(math.Pow(x, r))
-	fmt.Println(ln(x))
-	fmt.Println(math.Log(x))
-	// x := []float64{-3, -2, -1, 0, 1, 2, 3}
-	// var result, actual float64
-	// for i := range x {
-	// 	result, actual = exp(x[i]), math.Exp(x[i])
-	// 	fmt.Printf("     exp(%0.15f) = %0.15f\n", x[i], result)
-	// 	fmt.Printf("math.Exp(%0.15f) = %0.15f\n", x[i], actual)
-	// 	fmt.Printf("                        err = %0.15f\n\n", actual-result)
-	// }
+	x := 3.781721621559911
+	actual := exp(x)
+	expected := math.Exp(x)
+	err := abs(actual - expected)
+	fmt.Printf("exp(%v)\nexpected %v\n  actual %v\n   error  %v\n", x, expected, actual, err)
 }
 
 // powInt returns x^n for any real x and any integer n.
@@ -77,9 +66,6 @@ func pow(x, y float64) float64 {
 
 // exp returns e^x.
 func exp(x float64) float64 {
-	// math.Exp does this: e^r = 2^k * e^r where x = k ln 2 + r for some maximal integer k and r on [0, ln 2]
-	// https://math.stackexchange.com/questions/18445/fastest-way-to-calculate-ex-up-to-arbitrary-number-of-decimals
-
 	// Calculate 2^k
 	k := int(x / LN2)
 	r := x - float64(k)*LN2
@@ -91,7 +77,7 @@ func exp(x float64) float64 {
 	// GeeksForGeeks solution for set n
 	// TODO: Choose smallest possible n to value that minimizes error
 	v1 := 1.0
-	for n := 25.0; 0 < n; n-- {
+	for n := 20.0; 0 < n; n-- {
 		v1 = 1 + r*v1/n
 	}
 	return v0 * v1
@@ -102,8 +88,7 @@ func sqrt(x float64) float64 {
 	return nthRoot(x, 2)
 }
 
-// nthRoot returns x^(1/n). This is Newton's method applied to the
-// specific problem of solving v^n-x = 0 for set x and n.
+// nthRoot returns x^(1/n).
 func nthRoot(x float64, n int) float64 {
 	var chgSign bool
 	if x < 0 {
@@ -114,12 +99,12 @@ func nthRoot(x float64, n int) float64 {
 		chgSign = true
 	}
 
-	v0 := 1.0
-	v1 := v0 + 2*tol
+	v0 := 0.0
+	v1 := 1.0
 	p := float64(n)
 	for tol < abs(v1-v0) {
 		v0 = v1
-		v1 = v0 / p * (p - 1.0 + x*powInt(v0, -n))
+		v1 = 1 / p * (v0*(p-1.0) + x/powInt(v0, n-1))
 	}
 
 	if chgSign {
@@ -133,14 +118,36 @@ func ln(x float64) float64 {
 	if x == E {
 		return 1
 	}
-
-	y0 := 0.0
-	y1 := 1.0
-	for tol < abs(y1-y0) {
-		y0 = y1
-		y1 = y0 + x*exp(-y0) - 1
+	if x == 1 {
+		return 0
 	}
-	return y1
+	if x <= 0 {
+		panic("ln is undefined for non-positive values")
+	}
+
+	// ln(x) = n ln(2) + ln(y)
+	// Compute n ln(2)
+	var n int
+	for ; powInt(2, n) <= x; n++ {
+
+	}
+	v := float64(n-1) * LN2
+	y := x / powInt(2, n-1) // 1 <= y < 2
+	if y == 1 {
+		return roundTo(v, 15)
+	}
+
+	// Compute ln(y)
+	// v0 := 0.0
+	// v1 := 1.0
+	// for tol < abs(v1-v0) {
+	// 	v0 = v1
+	// 	v1 = v0 + y/exp(v0) - 1
+	// }
+	// return v + -1.7417939 + (2.8212026+(-1.4699568+(0.44717955-0.056570851*y)*y)*y)*y
+	return v + 0.405465 + 0.666667*(y-1.5) - 0.222222*pow(y-1.5, 2) + 0.0987654*pow(y-1.5, 3) - 0.0493827*pow(y-1.5, 4) + 0.0263374*pow(y-1.5, 5)
+	// 0.405465 + 0.666667 (x - 1.5) - 0.222222 (x - 1.5)^2 + 0.0987654 (x - 1.5)^3 - 0.0493827 (x - 1.5)^4 + 0.0263374 (x - 1.5)^5
+	// return roundTo(v+v1, 15)
 }
 
 // log returns the base b-logarithm of x.
@@ -176,7 +183,7 @@ func bisection(f func(x float64) float64, x0, x1 float64) float64 {
 	y, y0, y1 := f(x), f(x0), f(x1)
 
 	switch {
-	case y == 0:
+	case abs(y) < tol:
 		return x
 	case y0*y < 0:
 		return bisection(f, x0, x)
@@ -234,7 +241,7 @@ func isPrime(n int) bool {
 		panic("integer n must be greater than one")
 	}
 
-	if n == 2 || n == 3 {
+	if n == 2 {
 		return true
 	}
 
@@ -242,7 +249,7 @@ func isPrime(n int) bool {
 		return false
 	}
 
-	for i := 5; i <= int(sqrt(float64(n))); i += 2 {
+	for i := 3; i <= int(sqrt(float64(n))); i += 2 {
 		if n%i == 0 {
 			return false
 		}
@@ -321,6 +328,7 @@ func roundUpToBase(n, b int) int {
 // floor returns the largest integer value less than x as a float64. For
 // example, the floor of 1.9 is 1.0.
 func floor(x float64) float64 {
+	// TODO: Check for x < 0 case
 	return float64(int(x))
 }
 
