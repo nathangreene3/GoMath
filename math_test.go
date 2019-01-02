@@ -109,7 +109,7 @@ func TestPowInt(t *testing.T) {
 	}
 }
 
-func TestPowFloat64(t *testing.T) {
+func TestPow(t *testing.T) {
 	var x, y float64
 	var result float64
 	var expected float64
@@ -117,10 +117,26 @@ func TestPowFloat64(t *testing.T) {
 	tolerance := 0.000000001
 	for i := 0; i < 1000; i++ {
 		x, y = rand.ExpFloat64(), rand.ExpFloat64()
-		result = powFloat64(x, y)
+		result = pow(x, y)
 		expected = math.Pow(x, y)
 		if tolerance < abs(expected-result) {
 			t.Fatalf("i = %d input x = %v, y = %v, expected %v, received %v\n", i, x, y, expected, result)
+		}
+	}
+}
+
+func TestExp(t *testing.T) {
+	var x float64
+	var result float64
+	var expected float64
+
+	tolerance := 0.000000001
+	for i := 0; i < 1000; i++ {
+		x = math.Pow(-1, float64(rand.Intn(2)+1)) * rand.ExpFloat64()
+		result = exp(x)
+		expected = math.Exp(x)
+		if tolerance < abs(expected-result) {
+			t.Fatalf("i = %d input x = %v, expected %v, received %v\n", i, x, expected, result)
 		}
 	}
 }
@@ -131,8 +147,8 @@ func BenchmarkPowInt(b *testing.B) {
 	}
 }
 
-func BenchmarkPowFloat64(b *testing.B) {
+func BenchmarkPow(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		powFloat64(100, 100)
+		pow(100, 100)
 	}
 }
