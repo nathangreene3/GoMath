@@ -15,15 +15,20 @@ const (
 )
 
 func main() {
-	x := []float64{-3, -2, -1, 0, 1, 2, 3}
-	for i := range x {
-		// fmt.Printf("exp(%0.0f) = %0.2f\n", x[i], exp(x[i]))
-		fmt.Printf("err: %v\n", abs(math.Exp(x[i])-exp(x[i])))
-	}
+	fmt.Println(pow(0.587298215905968, 0.537282093653805))
+	fmt.Println(math.Pow(0.587298215905968, 0.537282093653805))
+	// x := []float64{-3, -2, -1, 0, 1, 2, 3}
+	// var result, actual float64
+	// for i := range x {
+	// 	result, actual = exp(x[i]), math.Exp(x[i])
+	// 	fmt.Printf("     exp(%0.15f) = %0.15f\n", x[i], result)
+	// 	fmt.Printf("math.Exp(%0.15f) = %0.15f\n", x[i], actual)
+	// 	fmt.Printf("                        err = %0.15f\n\n", actual-result)
+	// }
 	// x, y := 0.587298215905968, 0.537282093653805
-	// result, correctAnswer := powFloat64(x, y), math.Pow(x, y)
+	// result, correctAnswer := pow(x, y), math.Pow(x, y)
 	// err := abs(correctAnswer - result)
-	// fmt.Printf("powFloat64(%0.15f, %0.15f) = %0.15f\n", x, y, result)
+	// fmt.Printf("pow(%0.15f, %0.15f) = %0.15f\n", x, y, result)
 	// fmt.Printf("  math.Pow(%0.15f, %0.15f) = %0.15f\n", x, y, correctAnswer)
 	// fmt.Printf("err = %0.15f\n", err)
 }
@@ -56,51 +61,65 @@ func powInt(x float64, n int) float64 {
 	return y
 }
 
-// powFloat64 returns x^y for real x and y. Panics if x < 0 and y is
-// poorly chosen. If y is an integer (possibly negative), panic will not
-// occur. If it is a fraction, and the reciprical of the difference in y
-// and its integer part is even, panic will occur. For example, y = 1.1
-// will cause a panic because 1 / (1.1 - 1.0) = 10 is even.
-func powFloat64(x, y float64) float64 {
-	tol := 0.000000000000001
+// pow returns x^y for real x and y.
+func pow(x, y float64) float64 {
+	// x^y = x^n * x^r
+	// 1. Compute x^n
 	n := int(y)
-	r := y - float64(n) // 0 <= r < 1; can't use nthRoot as r is not 1/a always
-	v := powInt(x, n)   // v = 1 when 0 <= y < 1
+	r := y - float64(n) // 0 <= r < 1
+	v := powInt(x, n)
+
+	// 2. Compute x^r
+	tol := 0.000000000000001
 	if tol < r {
-		return v * exp(r*ln(x))
+		// return v * exp(r*ln(x))
+		v0 := 0.0
+		v1 := 1.0
+		for tol < abs(v1-v0) {
+			v0 = v1
+			v1 = v0 * (1 + r*(x*pow(v0, -1/r)-1))
+		}
+		return v * v1
 	}
 	return v
 }
 
-// exp returns e^x.if z/d < 0 {
-// 	fmt.Printf("%0.15f\n", z/d)
-// } else {
-// 	fmt.Printf(" %0.15f\n", z/d)
-// }
+// exp returns e^x.
 func exp(x float64) float64 {
-	// math.Exp does this: e^r = 2^k * e^r for x = k ln 2 for some maximal integer k and r on [0, ln 2]
+	// math.Exp does this: e^r = 2^k * e^r where x = k ln 2 + r for some maximal integer k and r on [0, ln 2]
 	// https://math.stackexchange.com/questions/18445/fastest-way-to-calculate-ex-up-to-arbitrary-number-of-decimals
 
-	tol := 0.000000000000001
-	v := 1.0
-	k := x/LN2 - 1
-	r := x - k
+	// Calculate 2^k
+	k := int(x / LN2)
+	r := x - float64(k)*LN2
+	v := powInt(2, k)
 	if r == 0 {
 		return v
 	}
-	v0 := 2 * tol
-	v1 := 0.0
-	z := 1.0
-	d := 1.0
-	n := 1.0
-	for tol < abs(v1-v0) {
-		v0 = v1
-		v1 += z / d
-		z *= r
-		d *= n
-		n++
-	}
-	return v * v1
+	return v * powInt(1+r/1000, 1000) // Using definition e^r = (1+r/n)^n
+
+	// Calculate e^r = 1 + r + r^2/2 + r^3/6 + ... + r^n/n! + ...
+	// or e^r = 1 + x(1 + x/2(1 + x/3(1 + ...)))
+	// tol := 0.000000000000001
+	// v0 := 2 * tol
+	// v1 := 0.0
+	// z := 1.0
+	// d := 1.0
+	// n := 1.0
+	// for tol < abs(v1-v0) {
+	// 	v0 = v1
+	// 	v1 += z / d
+	// 	z *= r
+	// 	d *= n
+	// 	n++
+	// }
+
+	// GeeksForGeeks solution doesn't improve much
+	// v1 := 1.0
+	// for n := 25.0; 0 < n; n-- {
+	// 	v1 = 1 + r*v1/n
+	// }
+	// return v * v1
 }
 
 // sqrt returns +x^0.5.
