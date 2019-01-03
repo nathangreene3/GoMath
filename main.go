@@ -115,14 +115,13 @@ func nthRoot(x float64, n int) float64 {
 
 // ln returns the natural logarithm of base e.
 func ln(x float64) float64 {
-	if x == E {
-		return 1
-	}
-	if x == 1 {
-		return 0
-	}
-	if x <= 0 {
-		panic("ln is undefined for non-positive values")
+	switch {
+	case x == E:
+		return 1 // e^1 = e <==> ln(e) = 1
+	case x == 1:
+		return 0 // e^0 = 1 <==> ln(1) = 0
+	case x <= 0:
+		panic("ln is undefined for non-positive values") // e^x = y > 0 for all x <==> ln(y) is defined for all y > 0
 	}
 
 	// ln(x) = n ln(2) + ln(y)
@@ -131,8 +130,9 @@ func ln(x float64) float64 {
 	for ; powInt(2, n) <= x; n++ {
 
 	}
-	v := float64(n-1) * LN2
-	y := x / powInt(2, n-1) // 1 <= y < 2
+	n-- // n is one too big
+	v := float64(n) * LN2
+	y := x / powInt(2, n) // 1 <= y < 2
 	if y == 1 {
 		return roundTo(v, 15)
 	}
@@ -144,10 +144,37 @@ func ln(x float64) float64 {
 	// 	v0 = v1
 	// 	v1 = v0 + y/exp(v0) - 1
 	// }
-	// return v + -1.7417939 + (2.8212026+(-1.4699568+(0.44717955-0.056570851*y)*y)*y)*y
-	return v + 0.405465 + 0.666667*(y-1.5) - 0.222222*pow(y-1.5, 2) + 0.0987654*pow(y-1.5, 3) - 0.0493827*pow(y-1.5, 4) + 0.0263374*pow(y-1.5, 5)
-	// 0.405465 + 0.666667 (x - 1.5) - 0.222222 (x - 1.5)^2 + 0.0987654 (x - 1.5)^3 - 0.0493827 (x - 1.5)^4 + 0.0263374 (x - 1.5)^5
+
 	// return roundTo(v+v1, 15)
+	// return v + -1.7417939 + (2.8212026+(-1.4699568+(0.44717955-0.056570851*y)*y)*y)*y
+	// math.Log
+	y -= 1.5 // Center ln(y) approximation polynomial on 1.5 for use on range [1,2)
+	pvals := []float64{
+		0.4054650000,
+		0.6666670000,
+		0.2222220000,
+		0.0987654000,
+		0.0493827000,
+		0.0263374000,
+		0.0146319000,
+		0.0083610900,
+		0.0048773100,
+		0.0028902500,
+		0.0017341500,
+		0.0010510000,
+		0.0006422790,
+		0.0003952490,
+		0.0002446790,
+		0.0001522440,
+		0.0000951524,
+		0.0000597035,
+		0.0000375911,
+	}
+	for i := 0; i <= 18; i++ {
+		v += pvals[i] * y
+		y *= -y
+	}
+	return v
 }
 
 // log returns the base b-logarithm of x.
