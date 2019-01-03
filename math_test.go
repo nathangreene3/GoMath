@@ -4,7 +4,11 @@ import (
 	"math"
 	"math/rand"
 	"testing"
+
+	"github.com/cheynewallace/tabby"
 )
+
+// TODO: Add panic test scenarios
 
 func TestFactorial(t *testing.T) {
 	data := []struct {
@@ -17,12 +21,22 @@ func TestFactorial(t *testing.T) {
 		{3, 6},
 		{4, 24},
 		{5, 120},
+		{6, 720},
+		{7, 5040},
+		{8, 40320},
+		{9, 362880},
+		{10, 3628800},
 	}
-	var result int
+	var actual int
 	for i := range data {
-		result = factorial(data[i].input)
-		if result != data[i].ans {
-			t.Fatalf("expected %d, received %d\n", data[i].ans, result)
+		actual = factorial(data[i].input)
+		if actual != data[i].ans {
+			table := tabby.New()
+			table.AddHeader("Function", "Input", "Value")
+			table.AddLine("exp", data[i].input, actual)
+			table.AddLine("", "", data[i].ans)
+			table.Print()
+			t.Fatal("\n")
 		}
 	}
 }
@@ -30,68 +44,92 @@ func TestFactorial(t *testing.T) {
 func TestPowInt(t *testing.T) {
 	var x float64
 	var n int
-	var result float64
+	var actual float64
 	var expected float64
+	var err float64
 
 	for i := 0; i < 1000; i++ {
 		x, n = rand.ExpFloat64(), rand.Int() // Cant test negative x using math.Pow
-		result = powInt(x, n)
+		actual = powInt(x, n)
 		expected = math.Pow(x, float64(n))
-		if tol <= abs(expected-result) {
-			if expected < 0 || result < 0 {
-				t.Fatalf("powInt(%v)\nexpected %0.15f\nreturned %0.15f\n   error  %0.15f\n", x, expected, result, abs(result-expected))
-			}
-			t.Fatalf("powInt(%v)\nexpected %0.15f\nreturned %0.15f\n   error %0.15f\n", x, expected, result, abs(result-expected))
+		err = abs(expected - actual)
+		if 10*tol < err {
+			table := tabby.New()
+			table.AddHeader("Function", "Input", "Value")
+			table.AddLine("powInt", x, actual)
+			table.AddLine("math.Pow", x, expected)
+			table.AddLine("Abs Error", "", err)
+			table.Print()
+			t.Fatal("\n")
 		}
 	}
 }
 
 func TestPow(t *testing.T) {
 	var x, y float64
-	var result float64
+	var actual float64
 	var expected float64
+	var err float64
 
 	for i := 0; i < 1000; i++ {
 		x, y = rand.ExpFloat64(), rand.ExpFloat64()
-		result = pow(x, y)
+		actual = pow(x, y)
 		expected = math.Pow(x, y)
-		if tol <= abs(expected-result) {
-			if expected < 0 || result < 0 {
-				t.Fatalf("pow(%v)\nexpected %0.15f\nreturned %0.15f\n   error  %0.15f\n", x, expected, result, abs(result-expected))
-			}
-			t.Fatalf("pow(%v)\nexpected %0.15f\nreturned %0.15f\n   error %0.15f\n", x, expected, result, abs(result-expected))
+		err = abs(expected - actual)
+		if 10*tol < err {
+			table := tabby.New()
+			table.AddHeader("Function", "Input", "Value")
+			table.AddLine("pow", x, actual)
+			table.AddLine("math.Pow", x, expected)
+			table.AddLine("Abs Error", "", err)
+			table.Print()
+			t.Fatal("\n")
 		}
 	}
 }
 
 func TestExp(t *testing.T) {
 	var x float64
-	var result float64
+	var actual float64
 	var expected float64
+	var err float64
 
 	for i := 0; i < 1000; i++ {
 		x = math.Pow(-1, float64(rand.Intn(2)+1)) * rand.ExpFloat64()
-		result = exp(x)
+		actual = exp(x)
 		expected = math.Exp(x)
-		if tol < abs(expected-result) {
-			t.Fatalf("exp(%0.15f) expected %0.15f, returned %0.15f\n", x, expected, result)
+		err = abs(expected - actual)
+		if 10*tol < err {
+			table := tabby.New()
+			table.AddHeader("Function", "Input", "Value")
+			table.AddLine("exp", x, actual)
+			table.AddLine("math.Exp", x, expected)
+			table.AddLine("Abs Error", "", err)
+			table.Print()
+			t.Fatal("\n")
 		}
 	}
 }
+
 func TestLn(t *testing.T) {
 	var x float64
-	var result float64
+	var actual float64
 	var expected float64
+	var err float64
 
-	for i := 0; i < 1000; i++ {
+	for i := 0; i < 5; i++ {
 		x = rand.ExpFloat64()
-		result = ln(x)
+		actual = ln(x)
 		expected = math.Log(x)
-		if tol <= abs(expected-result) {
-			if expected < 0 || result < 0 {
-				t.Fatalf("ln(%v)\nexpected %0.15f\nreturned %0.15f\n   error  %0.15f\n", x, expected, result, abs(result-expected))
-			}
-			t.Fatalf("ln(%v)\nexpected %0.15f\nreturned %0.15f\n   error %0.15f\n", x, expected, result, abs(result-expected))
+		err = abs(expected - actual)
+		if 10*tol < err {
+			table := tabby.New()
+			table.AddHeader("Function", "Input", "Value")
+			table.AddLine("ln", x, actual)
+			table.AddLine("math.Log", x, expected)
+			table.AddLine("Abs Error", "", err)
+			table.Print()
+			t.Fatal("\n")
 		}
 	}
 }

@@ -5,23 +5,67 @@ import (
 	"math"
 )
 
+// Note: accuracy =/= precision. A precise, wrong answer is not accurate.
+// An accurate, imprecise answer is a lucky guess that may not be
+// duplicated or may fail under other circumstances. Here, all values
+// are precise to the constant tol. Accuracy is only guarenteed by the
+// algorithm of choice.
+
 const (
 	// Pi is the ratio of a circle's circumfrence to its diameter.
 	Pi = float64(3.141592653589793)
-	// E is Euler's number, the natural rate of growth of the exponential function.
+	// E is Euler's number, the natural rate of growth of the exponential
+	// function.
 	E = float64(2.718281828459045)
-	// LN2 is the natural logarithm of two (ln(2))
-	LN2 = 0.693147180559945
-	// tol (5e-15) is the tolerance required by all numerical functions
-	tol = 0.000000000000005
+	// LN2 is the natural logarithm of two (ln(2)).
+	LN2 = float64(0.693147180559945)
+	// tol (1e-16) is the tolerance required by all numerical functions.
+	// All numerical methods must converge to a value determined by this
+	// tolerance. This does not guarentee the value returned is correct
+	// (accurate) to the number of digits represented here, but that the
+	// value returned cannot be made more precise with the method used.
+	tol = 5e-16
 )
 
 func main() {
-	x := 3.781721621559911
-	actual := exp(x)
-	expected := math.Exp(x)
-	err := abs(actual - expected)
-	fmt.Printf("exp(%v)\nexpected %v\n  actual %v\n   error  %v\n", x, expected, actual, err)
+	// x := 2.9237425767113105
+	// actual := ln(x)
+	// expected := math.Log(x)
+	// err := abs(actual - expected)
+	// table := tabby.New()
+	// table.AddHeader("Function", "Input", "Value")
+	// table.AddLine("ln", x, actual)
+	// table.AddLine("math.Log", x, expected)
+	// table.AddLine("Abs Error", "", err)
+	// table.Print()
+
+	x := 1234
+	fmt.Println(
+		roundUpToBase(int(x), int(math.Pow10(int(math.Log10(float64(x))-1)))), // Equivalent to roundToMag10(x,2)
+	) // 1300
+
+	for i := 0; i < 5; i++ {
+		fmt.Println(roundToMag10(x, i))
+	}
+}
+
+// roundToMag10 rounds x to the next power n of 10. Panics if n is
+// negative. A few examples include:
+// 1. x = 1234, n = 0 -->  1235
+// 2. x = 1234, n = 1 -->  1240
+// 3. x = 1234, n = 3 -->  2000
+// 4. x = 1234, n = 5 --> 10000
+func roundToMag10(x, n int) int {
+	if n < 0 {
+		panic("n must be non-negative")
+	}
+	return roundUpToBase(x, int(math.Pow10(n)))
+}
+
+// returns the highest power of 10 such that x >= 10^n
+func mag10(x int) int {
+	var n int
+	return int(math.Log10(float64(x)))
 }
 
 // powInt returns x^n for any real x and any integer n.
@@ -90,7 +134,7 @@ func sqrt(x float64) float64 {
 
 // nthRoot returns x^(1/n).
 func nthRoot(x float64, n int) float64 {
-	var chgSign bool
+	var chgSign bool // Indicates sign of x
 	if x < 0 {
 		if n%2 == 0 {
 			panic("indeterminant form")
@@ -99,6 +143,7 @@ func nthRoot(x float64, n int) float64 {
 		chgSign = true
 	}
 
+	// Solve v^n - x = 0 using Newton-Raphson's method
 	v0 := 0.0
 	v1 := 1.0
 	p := float64(n)
@@ -124,57 +169,28 @@ func ln(x float64) float64 {
 		panic("ln is undefined for non-positive values") // e^x = y > 0 for all x <==> ln(y) is defined for all y > 0
 	}
 
-	// ln(x) = n ln(2) + ln(y)
-	// Compute n ln(2)
-	var n int
-	for ; powInt(2, n) <= x; n++ {
+	// Decompose ln(x) = k ln(2) + ln(y), where k is the largest integer
+	// such that 2^k <= x and y is a real number such that 0 <= y < 1.
+	// Compute k ln(2)
+	var k int
+	p := 1.0 // p = 2^k <= x
+	for ; p <= x; p *= 2 {
+		if x == p {
+			return float64(k) * LN2 // x = p = 2^k
+		}
+		k++
+	}
 
+	// Compute ln(y) using Newton-Raphson's method. y is on the range
+	// [1,2).
+	y := x / powInt(2, k) // 1 <= y < 2
+	v0 := 0.0
+	v1 := 1.5 // Initialize v1 as the center of [1,2)
+	for tol < abs(v1-v0) {
+		v0 = v1
+		v1 = v0 + y/exp(v0) - 1
 	}
-	n-- // n is one too big
-	v := float64(n) * LN2
-	y := x / powInt(2, n) // 1 <= y < 2
-	if y == 1 {
-		return roundTo(v, 15)
-	}
-
-	// Compute ln(y)
-	// v0 := 0.0
-	// v1 := 1.0
-	// for tol < abs(v1-v0) {
-	// 	v0 = v1
-	// 	v1 = v0 + y/exp(v0) - 1
-	// }
-
-	// return roundTo(v+v1, 15)
-	// return v + -1.7417939 + (2.8212026+(-1.4699568+(0.44717955-0.056570851*y)*y)*y)*y
-	// math.Log
-	y -= 1.5 // Center ln(y) approximation polynomial on 1.5 for use on range [1,2)
-	pvals := []float64{
-		0.4054650000,
-		0.6666670000,
-		0.2222220000,
-		0.0987654000,
-		0.0493827000,
-		0.0263374000,
-		0.0146319000,
-		0.0083610900,
-		0.0048773100,
-		0.0028902500,
-		0.0017341500,
-		0.0010510000,
-		0.0006422790,
-		0.0003952490,
-		0.0002446790,
-		0.0001522440,
-		0.0000951524,
-		0.0000597035,
-		0.0000375911,
-	}
-	for i := 0; i <= 18; i++ {
-		v += pvals[i] * y
-		y *= -y
-	}
-	return v
+	return float64(k)*LN2 + v1
 }
 
 // log returns the base b-logarithm of x.
