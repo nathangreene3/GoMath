@@ -134,14 +134,38 @@ func TestLn(t *testing.T) {
 	}
 }
 
+func BenchmarkMathPow(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		math.Pow(100, 100)
+	}
+}
+
 func BenchmarkPowInt(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		powInt(100, 100)
 	}
 }
 
+func BenchmarkMathPow10(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		math.Pow10(100)
+	}
+}
+
 func BenchmarkPow(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		pow(100, 100)
+	}
+}
+
+func BenchmarkPow2(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		pow2(100)
+	}
+}
+
+func BenchmarkPow10(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		pow10(100)
 	}
 }
