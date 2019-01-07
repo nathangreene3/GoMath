@@ -65,10 +65,20 @@ func RoundUpToBase(n, b int) int {
 	return n + b - (n % b)
 }
 
+// NumDigits returns the number of digits of any positive n in base b.
+func NumDigits(n, b int) int {
+	return int(Log(float64(n), float64(b))) + 1
+}
+
+// Trunc rounds x to the nearest integer value toward zero.
+func Trunc(x float64) float64 {
+	return float64(int(x))
+}
+
 // Floor returns the largest integer value less than x as a float64. For
 // example, the Floor of 1.9 is 1.0.
 func Floor(x float64) float64 {
-	// TODO: Check for x < 0 case
+	// a := abs(x)
 	return float64(int(x))
 }
 

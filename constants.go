@@ -25,5 +25,5 @@ const (
 	// tolerance. This does not guarentee the value returned is correct
 	// (accurate) to the number of digits represented here, but that the
 	// value returned cannot be made more precise with the method used.
-	tol = float64(5e-16)
+	tol = float64(1e-16)
 )

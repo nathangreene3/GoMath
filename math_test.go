@@ -1,6 +1,7 @@
-package main
+package math
 
 import (
+	"fmt"
 	"math"
 	"math/rand"
 	"testing"
@@ -28,8 +29,9 @@ func TestFactorial(t *testing.T) {
 		{10, 3628800},
 	}
 	var actual int
+
 	for i := range data {
-		actual = factorial(data[i].input)
+		actual = Factorial(data[i].input)
 		if actual != data[i].ans {
 			table := tabby.New()
 			table.AddHeader("Function", "Input", "Value")
@@ -39,6 +41,7 @@ func TestFactorial(t *testing.T) {
 			t.Fatal("\n")
 		}
 	}
+	fmt.Println("Factorial passed")
 }
 
 func TestPowInt(t *testing.T) {
@@ -50,19 +53,20 @@ func TestPowInt(t *testing.T) {
 
 	for i := 0; i < 1000; i++ {
 		x, n = rand.ExpFloat64(), rand.Int() // Cant test negative x using math.Pow
-		actual = powInt(x, n)
+		actual = PowInt(x, n)
 		expected = math.Pow(x, float64(n))
-		err = abs(expected - actual)
+		err = Abs(expected - actual)
 		if 10*tol < err {
 			table := tabby.New()
 			table.AddHeader("Function", "Input", "Value")
-			table.AddLine("powInt", x, actual)
+			table.AddLine("PowInt", x, actual)
 			table.AddLine("math.Pow", x, expected)
 			table.AddLine("Abs Error", "", err)
 			table.Print()
 			t.Fatal("\n")
 		}
 	}
+	fmt.Println("PowInt passed")
 }
 
 func TestPow(t *testing.T) {
@@ -73,19 +77,20 @@ func TestPow(t *testing.T) {
 
 	for i := 0; i < 1000; i++ {
 		x, y = rand.ExpFloat64(), rand.ExpFloat64()
-		actual = pow(x, y)
+		actual = Pow(x, y)
 		expected = math.Pow(x, y)
-		err = abs(expected - actual)
+		err = Abs(expected - actual)
 		if 10*tol < err {
 			table := tabby.New()
 			table.AddHeader("Function", "Input", "Value")
-			table.AddLine("pow", x, actual)
+			table.AddLine("Pow", x, actual)
 			table.AddLine("math.Pow", x, expected)
 			table.AddLine("Abs Error", "", err)
 			table.Print()
 			t.Fatal("\n")
 		}
 	}
+	fmt.Println("Pow passed")
 }
 
 func TestExp(t *testing.T) {
@@ -96,19 +101,20 @@ func TestExp(t *testing.T) {
 
 	for i := 0; i < 1000; i++ {
 		x = math.Pow(-1, float64(rand.Intn(2)+1)) * rand.ExpFloat64()
-		actual = exp(x)
+		actual = Exp(x)
 		expected = math.Exp(x)
-		err = abs(expected - actual)
+		err = Abs(expected - actual)
 		if 10*tol < err {
 			table := tabby.New()
 			table.AddHeader("Function", "Input", "Value")
-			table.AddLine("exp", x, actual)
+			table.AddLine("Exp", x, actual)
 			table.AddLine("math.Exp", x, expected)
 			table.AddLine("Abs Error", "", err)
 			table.Print()
 			t.Fatal("\n")
 		}
 	}
+	fmt.Println("Exp passed")
 }
 
 func TestLn(t *testing.T) {
@@ -117,21 +123,97 @@ func TestLn(t *testing.T) {
 	var expected float64
 	var err float64
 
-	for i := 0; i < 5; i++ {
+	for i := 0; i < 1000; i++ {
 		x = rand.ExpFloat64()
-		actual = ln(x)
+		actual = Ln(x)
 		expected = math.Log(x)
-		err = abs(expected - actual)
+		err = Abs(expected - actual)
 		if 10*tol < err {
 			table := tabby.New()
 			table.AddHeader("Function", "Input", "Value")
-			table.AddLine("ln", x, actual)
+			table.AddLine("Ln", x, actual)
 			table.AddLine("math.Log", x, expected)
 			table.AddLine("Abs Error", "", err)
 			table.Print()
 			t.Fatal("\n")
 		}
 	}
+	fmt.Println("Ln passed")
+}
+
+func TestSqrt(t *testing.T) {
+	var x float64
+	var actual float64
+	var expected float64
+	var err float64
+
+	for i := 0; i < 1000; i++ {
+		x = rand.ExpFloat64()
+		actual = Sqrt(x)
+		expected = math.Sqrt(x)
+		err = Abs(expected - actual)
+		if 10*tol < err {
+			table := tabby.New()
+			table.AddHeader("Function", "Input", "Value")
+			table.AddLine("Sqrt", x, actual)
+			table.AddLine("math.Sqrt", x, expected)
+			table.AddLine("Abs Error", "", err)
+			table.Print()
+			t.Fatal("\n")
+		}
+	}
+	fmt.Println("Sqrt passed")
+}
+
+func TestNthRoot(t *testing.T) {
+	var x float64
+	var n int
+	var actual float64
+	var expected float64
+	var err float64
+
+	for i := 0; i < 1000; i++ {
+		x = rand.ExpFloat64()
+		n = rand.Int() + 1
+		actual = NthRoot(x, n)
+		expected = math.Pow(x, 1/float64(n))
+		err = Abs(expected - actual)
+		if 10*tol < err {
+			table := tabby.New()
+			table.AddHeader("Function", "Input x", "Input n", "Value", "Note")
+			table.AddLine("NthRoot", x, n, actual, "")
+			table.AddLine("math.Pow", x, n, expected, "x^(1/n)")
+			table.AddLine("Abs Error", "", err, "")
+			table.Print()
+			t.Fatal("\n")
+		}
+	}
+	fmt.Println("NthRoot passed")
+}
+
+func TestNumDigits(t *testing.T) {
+	// var n int
+	// var b int
+	// var actual int
+	// var expected int
+	// var err float64
+
+	// for i := 0; i < 1000; i++ {
+	// 	x = rand.ExpFloat64()
+	// 	n = rand.Int() + 1
+	// 	actual = NthRoot(x, n)
+	// 	expected = math.Pow(x, 1/float64(n))
+	// 	err = Abs(expected - actual)
+	// 	if 10*tol < err {
+	// 		table := tabby.New()
+	// 		table.AddHeader("Function", "Input", "Value", "Note")
+	// 		table.AddLine("NthRoot", x, actual, "")
+	// 		table.AddLine("math.Pow", x, expected, "x^(1/n)")
+	// 		table.AddLine("Abs Error", "", err, "")
+	// 		table.Print()
+	// 		t.Fatal("\n")
+	// 	}
+	// }
 }
 
 func BenchmarkMathPow(b *testing.B) {
@@ -142,7 +224,7 @@ func BenchmarkMathPow(b *testing.B) {
 
 func BenchmarkPowInt(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		powInt(100, 100)
+		PowInt(100, 100)
 	}
 }
 
@@ -154,18 +236,22 @@ func BenchmarkMathPow10(b *testing.B) {
 
 func BenchmarkPow(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		pow(100, 100)
+		Pow(100, 100)
 	}
 }
 
 func BenchmarkPow2(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		pow2(100)
+		Pow2(100)
 	}
 }
 
 func BenchmarkPow10(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		pow10(100)
+		Pow10(100)
 	}
+}
+
+func TestTanh(t *testing.T) {
+	fmt.Println(tanh(1))
 }

@@ -67,16 +67,8 @@ func Pow10(n int) float64 {
 
 // Pow returns x^y for real x and y.
 func Pow(x, y float64) float64 {
-	// x^y = x^n * x^r for integer n and r on range [0,1)
-	// Compute x^n
 	n := int(y)
-	r := y - float64(n) // 0 <= r < 1
-	if r == 0 {
-		return PowInt(x, n) // y is an integer
-	}
-
-	// Compute x^r = e^(r ln x)
-	return PowInt(x, n) * Exp(r*Ln(x))
+	return PowInt(x, n) * Exp((y-float64(n))*Ln(x)) // x^y = x^n * x^r for integer n and r on range [0,1)
 }
 
 // Exp returns e^x.
@@ -84,18 +76,17 @@ func Exp(x float64) float64 {
 	// Calculate 2^k
 	k := int(x / Ln2)
 	r := x - float64(k)*Ln2
-	v0 := PowInt(2, k)
 	if r == 0 {
-		return v0
+		return PowInt(2, k)
 	}
 
 	// GeeksForGeeks solution for set n
-	// TODO: Choose smallest possible n to value that minimizes error
-	v1 := 1.0
+	// TODO: Choose smallest possible n that minimizes error
+	v := 1.0
 	for n := 20.0; 0 < n; n-- {
-		v1 = 1 + r*v1/n
+		v = 1 + r*v/n
 	}
-	return v0 * v1
+	return PowInt(2, k) * v
 }
 
 // Sqrt returns +x^0.5.
@@ -103,8 +94,16 @@ func Sqrt(x float64) float64 {
 	return NthRoot(x, 2)
 }
 
-// NthRoot returns x^(1/n).
+// NthRoot returns x^(1/n). Panics if n is zero or x is negative and n is
+// even simultaneously.
 func NthRoot(x float64, n int) float64 {
+	if n == 0 {
+		panic("indeterminant form")
+	}
+	if int(Pow2(1023)) <= n {
+		return 1
+	}
+
 	var chgSign bool // Indicates sign of x
 	if x < 0 {
 		if n%2 == 0 {
@@ -117,10 +116,14 @@ func NthRoot(x float64, n int) float64 {
 	// Solve v^n - x = 0 using Newton-Raphson's method
 	v0 := 0.0
 	v1 := 1.0
+	e0 := 0.0
+	e1 := 1.0
 	p := float64(n)
-	for tol < Abs(v1-v0) {
+	for tol < Abs(e1-e0) {
+		e0 = e1
 		v0 = v1
-		v1 = 1 / p * (v0*(p-1.0) + x/PowInt(v0, n-1))
+		v1 = 1 / p * (v0*(p-1) + x/PowInt(v0, n-1))
+		e1 = Abs(v1 - v0)
 	}
 
 	if chgSign {
@@ -158,9 +161,13 @@ func Ln(x float64) float64 {
 	y := x / PowInt(2, k) // 1 < y < 2
 	v0 := 0.0
 	v1 := -1.0 // v1 will be negative as ln(y) < 0 for all y on (0,1)
-	for tol < Abs(v1-v0) {
+	e0 := 0.0
+	e1 := 1.0
+	for tol <= Abs(e1-e0) {
+		e0 = e1
 		v0 = v1
 		v1 = v0 + y/Exp(v0) - 1
+		e1 = Abs(v1 - v0)
 	}
 	return float64(k)*Ln2 + v1
 }
@@ -178,4 +185,24 @@ func Log10(x float64) float64 {
 // Log2 returns the base-2 logarithm of x.
 func Log2(x float64) float64 {
 	return Ln(x) / Ln(2)
+}
+
+// tanh TODO
+func tanh(x float64) float64 {
+	// Precomputed coefficients to the taylor polynomial for tanh(x).
+	tvals := []float64{
+		1,
+		-0.333333333333333,
+		0.133333333333333,
+		-0.053968253968254,
+		0.0218694885361552,
+		-0.0088632355299022,
+	}
+	v := 0.0
+	x2 := x * x
+	for i := range tvals {
+		v += tvals[i] * x
+		x *= x2
+	}
+	return v
 }
