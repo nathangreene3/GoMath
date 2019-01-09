@@ -1,4 +1,4 @@
-package math
+package main
 
 // Abs returns |x|.
 func Abs(x float64) float64 {

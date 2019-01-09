@@ -1,4 +1,4 @@
-package math
+package main
 
 // GCD returns the greatest common divisor of two non-negative integers.
 func GCD(a, b int) int {

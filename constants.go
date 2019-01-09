@@ -1,4 +1,4 @@
-package math
+package main
 
 // Note: accuracy != precision. A precise, wrong answer is not accurate.
 // An accurate, imprecise answer is a lucky guess that may not be

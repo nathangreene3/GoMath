@@ -1,4 +1,6 @@
-package math
+package main
+
+import "fmt"
 
 // PowInt returns x^n for any real x and any integer n.
 func PowInt(x float64, n int) float64 {
@@ -73,6 +75,7 @@ func Pow(x, y float64) float64 {
 
 // Exp returns e^x.
 func Exp(x float64) float64 {
+	// Decompose e^x as e^x = 2^k * e^r for some integer k and real r on range [0,1)
 	// Calculate 2^k
 	k := int(x / Ln2)
 	r := x - float64(k)*Ln2
@@ -158,6 +161,7 @@ func Ln(x float64) float64 {
 	// Compute ln(y) using Newton-Raphson's method. y is on the range
 	// (1,2), not [1,2) since we would have already returned the case
 	// x = 2^k.
+	// THIS IS SLOOOW
 	y := x / PowInt(2, k) // 1 < y < 2
 	v0 := 0.0
 	v1 := -1.0 // v1 will be negative as ln(y) < 0 for all y on (0,1)
@@ -168,6 +172,7 @@ func Ln(x float64) float64 {
 		v0 = v1
 		v1 = v0 + y/Exp(v0) - 1
 		e1 = Abs(v1 - v0)
+		fmt.Println(v1)
 	}
 	return float64(k)*Ln2 + v1
 }

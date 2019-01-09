@@ -1,12 +1,9 @@
-package math
+package main
 
 import (
 	"fmt"
 	"math"
-	"math/rand"
 	"testing"
-
-	"github.com/cheynewallace/tabby"
 )
 
 // TODO: Add panic test scenarios
@@ -249,6 +246,18 @@ func BenchmarkPow2(b *testing.B) {
 func BenchmarkPow10(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		Pow10(100)
+	}
+}
+
+func BenchmarkLn(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		Ln(100)
+	}
+}
+
+func BenchmarkMathLn(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		math.Log(100)
 	}
 }
 
