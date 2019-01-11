@@ -1,6 +1,4 @@
-package main
-
-import "fmt"
+package math
 
 // PowInt returns x^n for any real x and any integer n.
 func PowInt(x float64, n int) float64 {
@@ -75,7 +73,6 @@ func Pow(x, y float64) float64 {
 
 // Exp returns e^x.
 func Exp(x float64) float64 {
-	// Decompose e^x as e^x = 2^k * e^r for some integer k and real r on range [0,1)
 	// Calculate 2^k
 	k := int(x / Ln2)
 	r := x - float64(k)*Ln2
@@ -103,9 +100,11 @@ func NthRoot(x float64, n int) float64 {
 	if n == 0 {
 		panic("indeterminant form")
 	}
-	if int(Pow2(1023)) <= n {
-		return 1
-	}
+	// TODO: Figure out what the largest n is before overflow occurs
+	// if int(Pow2(1023)) <= n {
+	// 	// fmt.Println(int(Pow2(1023)), n)
+	// 	return 1
+	// }
 
 	var chgSign bool // Indicates sign of x
 	if x < 0 {
@@ -126,7 +125,6 @@ func NthRoot(x float64, n int) float64 {
 		e0 = e1
 		v0 = v1
 		v1 = 1 / p * (v0*(p-1) + x/PowInt(v0, n-1))
-		e1 = Abs(v1 - v0)
 	}
 
 	if chgSign {
@@ -143,38 +141,33 @@ func Ln(x float64) float64 {
 	case x == 1:
 		return 0 // e^0 = 1 <==> ln(1) = 0
 	case x <= 0:
-		panic("ln is undefined for non-positive values") // e^x = y > 0 for all x <==> ln(y) is defined for all y > 0
+		panic("undefined for non-positive values") // e^x = y > 0 for all x <==> ln(y) is defined for all y > 0
 	}
 
-	// Decompose ln(x) = k ln(2) + ln(y), where k is the largest integer
-	// such that 2^k <= x and y is a real number such that 0 <= y < 1.
-	// Compute k ln(2)
-	var k int
+	// Decompose ln(x) = n ln(2) + ln(r), where n is the largest integer
+	// such that 2^n <= x and r is a real number such that 0 <= r < 1.
+	// Compute n ln(2)
+	var n int
 	p := 1.0 // p = 2^k <= x
 	for ; p <= x; p *= 2 {
 		if x == p {
-			return float64(k) * Ln2 // x = p = 2^k
+			return float64(n) * Ln2 // x = p = 2^k, r = 1
 		}
-		k++
+		n++
 	}
 
-	// Compute ln(y) using Newton-Raphson's method. y is on the range
-	// (1,2), not [1,2) since we would have already returned the case
-	// x = 2^k.
-	// THIS IS SLOOOW
-	y := x / PowInt(2, k) // 1 < y < 2
-	v0 := 0.0
-	v1 := -1.0 // v1 will be negative as ln(y) < 0 for all y on (0,1)
-	e0 := 0.0
-	e1 := 1.0
-	for tol <= Abs(e1-e0) {
-		e0 = e1
-		v0 = v1
-		v1 = v0 + y/Exp(v0) - 1
-		e1 = Abs(v1 - v0)
-		fmt.Println(v1)
+	// For r close to one, this works well.
+	// Compute ln(r) = 2*artanh((r-1)/(r+1)), 0 < r < 2 (if r = 1, then n*Ln2 would have already been returned)
+	r := x / PowInt(2, n)
+	r2 := r*r + 1
+	v := 0.0
+	q := 1.0 - 2/(r+1)       // (r - 1) / (r + 1) // r = x / 2^n
+	q2 := 1.0 - 4*r/(r2+2*r) // q^2 = (r2-2*r)/(r2+2*r)
+	for k := 1.0; k < 25; k += 2 {
+		v += q / k
+		q *= q2
 	}
-	return float64(k)*Ln2 + v1
+	return float64(n)*Ln2 + 2*v
 }
 
 // Log returns the base b-logarithm of x.
@@ -192,22 +185,30 @@ func Log2(x float64) float64 {
 	return Ln(x) / Ln(2)
 }
 
-// tanh TODO
-func tanh(x float64) float64 {
-	// Precomputed coefficients to the taylor polynomial for tanh(x).
-	tvals := []float64{
-		1,
-		-0.333333333333333,
-		0.133333333333333,
-		-0.053968253968254,
-		0.0218694885361552,
-		-0.0088632355299022,
+// Choose returns n-choose-k or n!/((n-k)!*k!). 0 <= k <= n and 0 <= n.
+func Choose(n, k int) int {
+	switch {
+	case k < 0:
+		panic("cannot choose negative quantity k")
+	case n < k:
+		panic("cannot choose k greater than n")
+	case n < 0:
+		panic("cannot choose from negative quantity n")
 	}
-	v := 0.0
-	x2 := x * x
-	for i := range tvals {
-		v += tvals[i] * x
-		x *= x2
+	return Factorial(n) / (Factorial(n-k) * Factorial(k))
+}
+
+// binomCoefs: TODO
+func binomCoefs(n int) []int {
+	coef := make([]int, 0, n+1)
+	for i := 0; i < n/2; i++ {
+		coef = append(coef, Choose(n, i))
 	}
-	return v
+	if n%2 == 0 {
+		coef = append(coef, Choose(n, n/2))
+	}
+	for i := 0; i < n/2; i++ {
+		coef = append(coef, coef[n-i+n/2])
+	}
+	return coef
 }

@@ -1,4 +1,4 @@
-package main
+package math
 
 // Note: accuracy != precision. A precise, wrong answer is not accurate.
 // An accurate, imprecise answer is a lucky guess that may not be
@@ -11,14 +11,20 @@ const (
 	// function.
 	E = float64(2.71828182845904523536028747135266249775724709369995957496696763)
 
+	// EulerMascheroni is the Euler-Mascheroni constant, usually denoted as the Greek letter gamma.
+	EulerMascheroni = float64(0.57721566490153286060651209008240243104215933593992)
+
 	// Phi is the golden ratio (1+sqrt 5)/2.
 	Phi = float64(1.61803398874989484820458683436563811772030917980576286213544862)
 
 	// Pi is the ratio of a circle's circumfrence to its diameter.
 	Pi = float64(3.14159265358979323846264338327950288419716939937510582097494459)
 
-	// Ln2 is the natural logarithm of two (ln(2)).
+	// Ln2 is the natural logarithm of two.
 	Ln2 = float64(0.693147180559945309417232121458176568075500134360255254120680009)
+
+	// Ln10 is the natural logarithm of ten.
+	Ln10 = float64(2.30258509299404568401799145468436420760110148862877297603332790)
 
 	// tol (1e-16) is the tolerance required by all numerical functions.
 	// All numerical methods must converge to a value determined by this

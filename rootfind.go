@@ -1,4 +1,4 @@
-package main
+package math
 
 // Newton (also Newton-raphson) finds a local root assuming f is smooth
 // and continuous. Note, Newton's method is known to be unstable.

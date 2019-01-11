@@ -1,4 +1,4 @@
-package main
+package math
 
 // GCD returns the greatest common divisor of two non-negative integers.
 func GCD(a, b int) int {
@@ -78,4 +78,52 @@ func Factor(n int) map[int]int {
 		factors[n] = 1
 	}
 	return factors
+}
+
+// Max returns the maximum value of two numbers.
+func Max(x, y float64) float64 {
+	if x < y {
+		return y
+	}
+	return x
+}
+
+// MaxIndex returns the index of the maximum value in an unordered list. Returns -1 if list is empty.
+func MaxIndex(values []float64) int {
+	n := len(values)
+	if n == 0 {
+		return -1
+	}
+
+	var m int
+	for i := 1; i < n; i++ {
+		if values[m] < values[i] {
+			m = i
+		}
+	}
+	return m
+}
+
+// Min returns the minimum value of two numbers.
+func Min(x, y float64) float64 {
+	if x < y {
+		return x
+	}
+	return y
+}
+
+// MinIndex returns the index of the minimum value in an unordered list. Returns -1 if list is empty.
+func MinIndex(values []float64) int {
+	n := len(values)
+	if n == 0 {
+		return -1
+	}
+
+	var m int
+	for i := 1; i < n; i++ {
+		if values[i] < values[m] {
+			m = i
+		}
+	}
+	return m
 }

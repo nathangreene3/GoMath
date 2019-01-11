@@ -1,4 +1,4 @@
-package main
+package math
 
 // Abs returns |x|.
 func Abs(x float64) float64 {
@@ -53,6 +53,12 @@ func RoundToMag10(x, n int) int {
 func OrderMag10(x int) int {
 	return int(Log10(float64(x)))
 }
+
+// OrderMag10 returns the order of magnitude (largest power) n of 10 such
+// that x >= 10^n. Panics if x <= 0.
+// func OrderMag10(x float64) float64 {
+// 	return float64(int(Log10(x)))
+// }
 
 // RoundUpToBase rounds a number up to the next multiple of b. For
 // example, given x = 21, b = 5, 25 would be returned. Panics if base is

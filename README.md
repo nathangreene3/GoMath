@@ -13,9 +13,11 @@ The *serverdev/math* package is a library of mathematical functions to replace t
 The following exported constants are commonly used and are provided for quick access.
 
 - **E** = 2.718... is Euler's number, the natural rate of growth of the exponential function.
+- **Ln2** = 0.693... is the natural logarithm of two.
+- **Ln10** = 2.302... is the natural logarithm of ten.
 - **Phi** = 1.618... is the golden ratio.
 - **Pi** = 3.141... is the ratio of a circle's circumfrence to its diameter.
-- **Ln2** = 0.693... is the natural logarithm of two.
+- **Sqrt2** = 1.414... is the square-root of two.
 
 ## Functions
 
@@ -92,6 +94,20 @@ The following exported constants are commonly used and are provided for quick ac
 - **Factor** returns a collection of each divisor of a positive integer mapped to the number of times each divisor divides said integer. The integer n passed is returned as a factor if and only if n is prime.
   - 12 --> {1:1, 2:2, 3:1} (12 is not prime)
   - 13 --> {1:1, 13:1} (13 is prime)
+- **Max** returns the maximum value of two numbers.
+  - 1, 2 --> 2
+  - -1, 2 --> 2
+  - 1, -2 --> 1
+- **MaxIndex** returns the index of the maximum value in an unordered list.
+  - {} --> -1 (empty list returns -1)
+  - {2, 3, 0, 1} --> 1 (3 has index 1)
+- **Min** returns the minimum value of two numbers.
+  - 1, 2 --> 1
+  - -1, 2 --> -1
+  - 1, -2 --> -2
+- **MinIndex** returns the index of the minimum value in an unordered list. Returns -1 if list is empty.
+  - {} --> -1 (empty list returns -1)
+  - {2, 3, 0, 1} --> 2 (0 has index 2)
 
 ### Rounding Functions
 
@@ -117,9 +133,9 @@ The following exported constants are commonly used and are provided for quick ac
   - 1, 5 --> 5
   - 4, 5 --> 5
 - **RoundToMag10** rounds an integer x to the the next 10^n. Panics if n is negative.
-  - 1234, 0 -->  1235 (rounds to 10^0 =     1)
-  - 1234, 1 -->  1240 (rounds to 10^1 =    10)
-  - 1234, 3 -->  2000 (rounds to 10^3 =  1000)
+  - 1234, 0 --> 1235 (rounds to 10^0 = 1)
+  - 1234, 1 --> 1240 (rounds to 10^1 = 10)
+  - 1234, 3 --> 2000 (rounds to 10^3 = 1000)
   - 1234, 5 --> 10000 (rounds to 10^5 = 10000)
 - **OrderMag10** returns the order of magnitude (largest power) n of 10 such that x >= 10^n. Panics if n is not positive.
   - 0 --> *Panic*: 10^n > 0 for all n.
