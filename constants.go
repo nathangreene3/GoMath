@@ -32,4 +32,23 @@ const (
 	// (accurate) to the number of digits represented here, but that the
 	// value returned cannot be made more precise with the method used.
 	tol = float64(1e-16)
+
+	maxFloat32             = 3.40282346638528859811704183484516925440e+38  // 2**127 * (2**24 - 1) / 2**23
+	smallestNonzeroFloat32 = 1.401298464324817070923729583289916131280e-45 // 1 / 2**(127 - 1 + 23)
+
+	maxFloat64             = 1.797693134862315708145274237317043567981e+308 // 2**1023 * (2**53 - 1) / 2**52
+	smallestNonzeroFloat64 = 4.940656458412465441765687928682213723651e-324 // 1 / 2**(1023 - 1 + 52)
+
+	maxInt8   = 1<<7 - 1
+	minInt8   = -1 << 7
+	maxInt16  = 1<<15 - 1
+	minInt16  = -1 << 15
+	maxInt32  = 1<<31 - 1
+	minInt32  = -1 << 31
+	maxInt64  = 1<<63 - 1
+	minInt64  = -1 << 63
+	maxUint8  = 1<<8 - 1
+	maxUint16 = 1<<16 - 1
+	maxUint32 = 1<<32 - 1
+	maxUint64 = 1<<64 - 1
 )

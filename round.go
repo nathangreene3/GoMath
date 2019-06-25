@@ -6,12 +6,15 @@ func Abs(x float64) float64 {
 	if x < 0 {
 		return -x
 	}
+
 	return x
+
+	// return x & (maxFloat64 >> 1)
 }
 
 // Round returns x rounded to the nearest whole number as a float64.
 func Round(x float64) float64 {
-	changedSign := false
+	var changedSign bool
 	if x < 0 {
 		x = -x
 		changedSign = true
@@ -25,6 +28,7 @@ func Round(x float64) float64 {
 	if changedSign {
 		return -y
 	}
+
 	return y
 }
 
@@ -46,6 +50,7 @@ func RoundToMag10(x, n int) int {
 	if n < 0 {
 		panic("n must be non-negative")
 	}
+
 	return RoundUpToBase(x, int(Pow10(n)))
 }
 
@@ -68,6 +73,7 @@ func RoundUpToBase(n, b int) int {
 		// TODO: Consider b < 0 or n < 0
 		panic("base b must be positive")
 	}
+
 	return n + b - (n % b)
 }
 
